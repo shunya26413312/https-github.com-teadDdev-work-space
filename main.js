@@ -13,6 +13,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+class Tetrimino {
+    constructor(){
+        this.Tetrimino =[
+            [
+                [[0,1],[1,1],[2,1],[3,1]], // 棒形
+            [[1,0],[1,1],[2,0],[2,1]], // 正方形
+            [[0,1],[1,0],[1,1],[2,0]], // S字
+            [[0,0],[1,0],[1,1],[2,1]], // Z字
+            [[0,0],[0,1],[1,1],[2,1]], // J字
+            [[0,1],[1,1],[2,0],[2,1]], // L字
+            [[0,1],[1,0],[1,1],[2,1]] 
+            ]
+        ];
+    // テトリミノの形状
+    }
+
+    // ランダムにテトリミノを取得
+    static getramdaoTetrimino(){
+        let ramdomtetrimino = Math.floor(Math.random()*this.Tetrimino.length)+1;
+        return this.Tetrimino[ramdomtetrimino];
+}    
+    // テトリミノの形状を取得
+    static getTypePoint(type) {
+        return this.getTypePointArray()[type - 1];
+}
+    
+    
+}
+
 
 
 class TetrisGame {
