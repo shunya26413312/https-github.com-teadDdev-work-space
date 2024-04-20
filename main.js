@@ -8,7 +8,58 @@ document.addEventListener('DOMContentLoaded', () => {
 	const nextGrid = document.querySelector('#next-grid');
 	let nextGridSquares = Array.from({length: 16}, () => document.createElement('div'));
 	nextGridSquares.forEach(square => nextGrid.appendChild(square))
-});
+});	
+
+	//画面の幅
+	const width = 10;
+
+	//L字型テトリミノ
+	const lTetorimino = [
+		[0, width, width * 2, width * 2 + 1],
+		[0, 1, 2, width * 1 + 2],
+		[1, width + 1, width * 2 + 1, width * 2],
+		[0, 1, 2, width]
+	]
+
+	//O字型テトリミノ
+	const oTetorimino = [
+		[1, 2, 1 + width, 2 + width],
+		[1, 2, 1 + width, 2 + width],
+		[1, 2, 1 + width, 2 + width],
+		[1, 2, 1 + width, 2 + width]
+	]
+
+	//S字型テトリミノ
+	const sTetorimino = [
+		[1, 2, width, width + 1],
+		[1, width + 1, width + 2, width * 2 + 2],
+		[1, 2, width, width + 1],
+		[1, width + 1, width + 2, width * 2 + 2]
+	]
+
+	//Z字型テトリミノ
+	const zTetrimino = [
+		[0, 1, width + 1, width + 2],
+		[2, width + 1, width + 2, width * 2 + 1],
+		[0, 1, width + 1, width + 2],
+		[2, width + 1, width + 2, width * 2 + 1]
+	];
+
+	//I字型テトリミノ
+	const iTetorimino = [
+		[0, width, width * 2, width * 3],
+    	[0, 1, 2, 3],
+		[0, width, width * 2, width * 3],
+    	[0, 1, 2, 3]
+	]
+
+	//T字型テトリミノ
+	const tTetrimino = [
+		[1, width, width + 1, width + 2],
+		[1, width + 1, width + 2, width * 2 + 1], 
+		[width, width + 1, width + 2, width * 2 + 1], 
+		[1, width, width + 1, width * 2 + 1]
+	];
 
 //ボタン押下時のアクション定義
 document.addEventListener('keydown', function(event) {
