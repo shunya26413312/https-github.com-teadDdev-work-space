@@ -3,113 +3,267 @@ document.addEventListener('DOMContentLoaded', () => {
 	const grid = document.querySelector('#grid');
 	let gridSquares = Array.from({length: 200}, () => document.createElement('div'));
 	gridSquares.forEach(square => grid.appendChild(square))
+	const startBtn = document.getElementById('start-button');
+
+	for (var i = 90; i < 100 ; i++ ){
+		gridSquares[i].classList.add('tetromino');
+	}
 
 	// create next-grid
 	const nextGrid = document.querySelector('#next-grid');
 	let nextGridSquares = Array.from({length: 16}, () => document.createElement('div'));
-	nextGridSquares.forEach(square => nextGrid.appendChild(square))
-});
+	nextGridSquares.forEach(square => nextGrid.appendChild(square))	
 
+	const colors = [
+		'orange',
+    	'red',
+    	'purple',
+    	'green',
+    	'blue',
+    	'yellow',
+    	'pink'
+	]
 
+	//ボタン押下時のアクション定義
+	document.addEventListener('keydown', function(event) {
+	    if (event.key == 'ArrowLeft') {
+	        moveLeft();
+	    } else if (event.key == 'ArrowRight') {
+	        moveRight();
+	    } else if (event.key == 'ArrowUp') {
+	        rotate();
+	    } else if (event.key == 'ArrowDown') {
+	        moveDown();
+	    }
+	});
 
-//ボタン押下時のアクション定義
-document.addEventListener('keydown', function(event) {
-    if (event.key == 'ArrowLeft') {
-        moveLeft();
-    } else if (event.key == 'ArrowRight') {
-        moveRight();
-    } else if (event.key == 'ArrowUp') {
-        rotate();
-    } else if (event.key == 'ArrowDown') {
-        moveDown();
-    }
-});
+	startBtn.addEventListener('click', () => {
+		if (timerId) {
+		  clearInterval(timerId)
+		  timerId = null
+		} else {
+		  draw()
+		  timerId = setInterval(moveDown, 1000)
+		  nextRandom = Math.floor(Math.random()*tetoriminos.length)
+		}
+	})
 
-function moveLeft() {
-    //TODO テトロミノを消す処理
-    //undraw()
+	//画面の幅
+	const width = 10;
+	//L字型テトリミノ
+	const lTetorimino = [
+		[0, width, width * 2, width * 2 + 1],
+		[0, 1, 2, width * 1 + 2],
+		[1, width + 1, width * 2 + 1, width * 2],
+		[0, 1, 2, width]
+	]
 
-    //左端にない場合は左に動く
-    const isAtLeft = current.some(index => ((currentPosition + index) % width === 0))
-    if(!isAtLeft) {
-        currentPosition -= 1
-    }
+	//O字型テトリミノ
+	const oTetorimino = [
+		[1, 2, 1 + width, 2 + width],
+		[1, 2, 1 + width, 2 + width],
+		[1, 2, 1 + width, 2 + width],
+		[1, 2, 1 + width, 2 + width]
+	]
 
-    //動いた先にテトロミノがある場合は戻る
-    if(current.some(index => squares[currentPosition + index].classList.contains('taken'))) {
-        currentPosition += 1
-    }
+	//S字型テトリミノ
+	const sTetorimino = [
+		[1, 2, width, width + 1],
+		[1, width + 1, width + 2, width * 2 + 2],
+		[1, 2, width, width + 1],
+		[1, width + 1, width + 2, width * 2 + 2]
+	]
 
-    //TODO テトロミノを再描画
-    //draw()
-}
+	//Z字型テトリミノ
+	const zTetrimino = [
+		[0, 1, width + 1, width + 2],
+		[2, width + 1, width + 2, width * 2 + 1],
+		[0, 1, width + 1, width + 2],
+		[2, width + 1, width + 2, width * 2 + 1]
+	];
 
-function moveRight() {
-    //TODO テトロミノを消す処理
-    //undraw()
+	//I字型テトリミノ
+	const iTetorimino = [
+		[0, width, width * 2, width * 3],
+		[0, 1, 2, 3],
+		[0, width, width * 2, width * 3],
+		[0, 1, 2, 3]
+	]
 
-    //右端にない場合は右に動く
-    const isAtRight = current.some(index => ((currentPosition + index) % width === width - 1))
-    if(!isAtRight) {
-        currentPosition += 1
-    }
+	//T字型テトリミノ
+	const tTetrimino = [
+		[1, width, width + 1, width + 2],
+		[1, width + 1, width + 2, width * 2 + 1], 
+		[width, width + 1, width + 2, width * 2 + 1], 
+		[1, width, width + 1, width * 2 + 1]
+	];
 
-    //動いた先にテトロミノがある場合は戻る
-    if(current.some(index => squares[currentPosition + index].classList.contains('taken'))) {
-        currentPosition -= 1
-    }
-    
-    //TODO テトロミノを再描画
-    //draw()
-}
+	const tetoriminos = [lTetorimino,oTetorimino,sTetorimino,zTetrimino,iTetorimino,tTetrimino];
 
-function moveDown() {
-    //TODO テトロミノを消す処理
-    //undraw()
-    currentPosition += width;
-    //TODO テトロミノを再描画
-    //draw()
-}
+	let timerId;
+	let nextRandom = Math.floor(Math.random() * tetoriminos.length);
 
+	//最初に描画される際の場所を設定
+	let currentPosition = 4;
+	//回転時の変数
+	let currentRotation = 0;
 
-class Game {
-    constructor() {
-        this.gameField = document.querySelector('#grid');
-        this.nextGameField = document.querySelector('#next-grid');
-        this.score = 0;
-        this.linesCleared = 0;
-        this.time = 0;
+	//どのテトロミノが出力されるかをランダムに決める
+	let random = Math.floor(Math.random()*tetoriminos.length)
+	let currentTeto = tetoriminos[random][currentRotation];
 
-        // ゲームの初期状態を設定
-        this.gameReset();
-    }
+	//テトロミノ描画
+	function draw() {
+		currentTeto.forEach(index => {
+			const actualIndex = currentPosition + index;
+			if (actualIndex >= 0 && actualIndex < gridSquares.length) {
+				gridSquares[actualIndex].classList.add('tetromino');
+				gridSquares[actualIndex].style.backgroundColor = colors[random];
+			}
+		});
+	}
 
-    gameReset() {
-        // グリッドをクリア
-        this.gameField.innerHTML = '';
-        this.nextGameField.innerHTML = '';
+	//テトロミノ削除
+	function undraw() {
+		currentTeto.forEach(index => {
+			gridSquares[currentPosition + index].classList.remove('tetromino');
+			gridSquares[currentPosition + index].style.backgroundColor = '';
+		})
+	}
+	
+	function moveLeft() {
+		undraw();
+		// 左端にいるかチェック
+		const isAtLeftEdge = currentTeto.some(index => (currentPosition + index) % width === 0);
+		if (!isAtLeftEdge) {
+			currentPosition -= 1;
+			if (currentTeto.some(index => gridSquares[currentPosition + index].classList.contains('taken'))) {
+				currentPosition += 1;  // もし移動先に既にブロックがあれば、戻す
+			}
+		}
+		draw();
+	}
+	
+	function moveRight() {
+		undraw();
+		// 右端にいるかチェック
+		const isAtRightEdge = currentTeto.some(index => (currentPosition + index + 1) % width === 0);
+		if (!isAtRightEdge) {
+			currentPosition += 1;
+			if (currentTeto.some(index => gridSquares[currentPosition + index].classList.contains('taken'))) {
+				currentPosition -= 1;  // もし移動先に既にブロックがあれば、戻す
+			}
+		}
+		draw();
+	}
 
-        // グリッドを再作成
-        for (let i = 0; i < 200; i++) {
-            const square = document.createElement('div');
-            this.gameField.appendChild(square);
+	function freeze() {
+		if (currentTeto.some(index => currentPosition + index + width >= gridSquares.length || gridSquares[currentPosition + index + width].classList.contains('taken'))) {
+			currentTeto.forEach(index => {
+				gridSquares[currentPosition + index].classList.add('taken');
+				gridSquares[currentPosition + index].style.backgroundColor = colors[random]; // 確実に色を保持
+			});
+			random = nextRandom;
+			nextRandom = Math.floor(Math.random() * tetoriminos.length);
+			currentTeto = tetoriminos[random][currentRotation];
+			currentPosition = 4;
+            deleteLines();
+            updateRow(y, row);
+			draw();
+		}
+	}
+	
+	function moveDown() {
+		undraw();
+		currentPosition += width;
+	
+		if (!chkCollision()) { 
+			currentPosition -= width; 
+			freeze(); 
+		} else {
+			draw(); 
+		}
+	}
+	
+	function rotate() {
+		undraw();
+		const originalRotation = currentRotation;
+		currentRotation = (currentRotation + 1) % 4;
+		currentTeto = tetoriminos[random][currentRotation];
+	
+		const offset = currentTeto.some(index => (currentPosition + index) % width === 0) ? 1 : currentTeto.some(index => (currentPosition + index) % width === width - 1) ? -1 : 0;
+		currentPosition += offset;
+	
+		if (!chkCollision()) {
+			currentRotation = originalRotation;
+			currentTeto = tetoriminos[random][currentRotation];
+			currentPosition -= offset;
+		}
+
+		draw();
+	}
+
+	function isAtRight() {
+		return currentTeto.some(index=> (currentPosition + index + 1) % width === 0)  
+	}
+	  
+	function isAtLeft() {
+		return currentTeto.some(index=> (currentPosition + index) % width === 0)
+	}
+
+	//衝突判定
+	function chkCollision() {
+    for (let index of currentTeto) {
+        let nextPosition = currentPosition + index;
+        if (nextPosition < 0 || nextPosition >= gridSquares.length || gridSquares[nextPosition].classList.contains('taken')) {
+            return false; // 衝突発生
         }
-        for (let i = 0; i < 16; i++) {
-            const square = document.createElement('div');
-            this.nextGameField.appendChild(square);
+    }
+    return true; // 衝突なし
+}
+function deleteLines() {
+    let linesCleared = 0;
+    for (let y = 0; y < 20; y++) {
+      let blockCount = 0;
+      for (let x = 0; x < width; x++) {
+        if (gridSquares[y * width + x].classList.contains('taken')) {
+          blockCount++;
+        }
+      }
+
+      if (blockCount === width) {
+        // 埋まった行のブロックを全て削除
+        for (let x = 0; x < width; x++) {
+          let idx = y * width + x;
+          gridSquares[idx].classList.remove('taken', 'tetromino');
+          gridSquares[idx].style.backgroundColor = '';
         }
 
-        // スコアとその他のゲーム情報をリセット
-        this.score = 0;
-        this.linesCleared = 0;
-        this.time = 0;
-    }
-}
+        //上の行を下の行へ移動
+        for (let moveY = y; moveY > 0 ; moveY--) {
+            for (let x = 0; x < width; x++) {
+                let currentIdx = moveY * width + x;
+                let aboveIdx = (moveY - 1) * width + x;
+                gridSquares[currentIdx].className = gridSquares[aboveIdx].className;
+                gridSquares[currentIdx].style.backgroundColor = gridSquares[aboveIdx].style.backgroundColor;
+        }
 
-// ドキュメントが完全に読み込まれた後にゲームを開始
-document.addEventListener('DOMContentLoaded', () => {
-    const game = new Game();
-    document.getElementById('resetButton').addEventListener('click', () => {
-        game.gameReset(); // リセットボタンがクリックされたときにゲームをリセット
-    });
-});
+        // 削除した行を配列から削除
+        let removedRow = gridSquares.slice(y * width, (y + 1) * width);
+        gridSquares.splice(y * width, width);
+
+        for (let x = 0; x < width; x++) {
+            let idx = x; // 最上行のインデックス
+            gridSquares[idx].classList.remove('taken', 'tetromino');
+            gridSquares[idx].style.backgroundColor = '';
+        }
+
+    return linesCleared;
+        }
+    }
+}}
+});	
+
+
+
+
