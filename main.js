@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', () => {
 	// create grid
 	const grid = document.querySelector('#grid');
@@ -13,115 +11,105 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-class Tetrimino {
-    constructor(){
-        this.Tetrimino =[
-            [
-                [[0,1],[1,1],[2,1],[3,1]], // 棒形
-            [[1,0],[1,1],[2,0],[2,1]], // 正方形
-            [[0,1],[1,0],[1,1],[2,0]], // S字
-            [[0,0],[1,0],[1,1],[2,1]], // Z字
-            [[0,0],[0,1],[1,1],[2,1]], // J字
-            [[0,1],[1,1],[2,0],[2,1]], // L字
-            [[0,1],[1,0],[1,1],[2,1]] 
-            ]
-        ];
-    // テトリミノの形状
+
+//ボタン押下時のアクション定義
+document.addEventListener('keydown', function(event) {
+    if (event.key == 'ArrowLeft') {
+        moveLeft();
+    } else if (event.key == 'ArrowRight') {
+        moveRight();
+    } else if (event.key == 'ArrowUp') {
+        rotate();
+    } else if (event.key == 'ArrowDown') {
+        moveDown();
+    }
+});
+
+function moveLeft() {
+    //TODO テトロミノを消す処理
+    //undraw()
+
+    //左端にない場合は左に動く
+    const isAtLeft = current.some(index => ((currentPosition + index) % width === 0))
+    if(!isAtLeft) {
+        currentPosition -= 1
     }
 
-    // ランダムにテトリミノを取得
-    static getramdaoTetrimino(){
-        let ramdomtetrimino = Math.floor(Math.random()*this.Tetrimino.length)+1;
-        return this.Tetrimino[ramdomtetrimino];
-}    
-    // テトリミノの形状を取得
-    static getTypePoint(type) {
-        return this.getTypePointArray()[type - 1];
-}
-    
-    
+    //動いた先にテトロミノがある場合は戻る
+    if(current.some(index => squares[currentPosition + index].classList.contains('taken'))) {
+        currentPosition += 1
+    }
+
+    //TODO テトロミノを再描画
+    //draw()
 }
 
+function moveRight() {
+    //TODO テトロミノを消す処理
+    //undraw()
+
+    //右端にない場合は右に動く
+    const isAtRight = current.some(index => ((currentPosition + index) % width === width - 1))
+    if(!isAtRight) {
+        currentPosition += 1
+    }
+
+    //動いた先にテトロミノがある場合は戻る
+    if(current.some(index => squares[currentPosition + index].classList.contains('taken'))) {
+        currentPosition -= 1
+    }
+    
+    //TODO テトロミノを再描画
+    //draw()
+}
+
+function moveDown() {
+    //TODO テトロミノを消す処理
+    //undraw()
+    currentPosition += width;
+    //TODO テトロミノを再描画
+    //draw()
+}
 
 
-class TetrisGame {
+class Game {
     constructor() {
+        this.gameField = document.querySelector('#grid');
+        this.nextGameField = document.querySelector('#next-grid');
         this.score = 0;
         this.linesCleared = 0;
+        this.time = 0;
+
+        // ゲームの初期状態を設定
+        this.gameReset();
     }
 
+    gameReset() {
+        // グリッドをクリア
+        this.gameField.innerHTML = '';
+        this.nextGameField.innerHTML = '';
 
-    // ラインが完成したかどうかをチェックし、スコアを更新
-    checkLines() {
-        let linesToClear = [];
-        for (let y = 0; y < this.gameField.height; y++) {
-            let isFullLine = true;
-            for (let x = 0; x < this.gameField.width; x++) {
-                if (!this.gameField.grid[x][y]) {
-                    isFullLine = false;
-                    break;
-                }
-            }
-            if (isFullLine) linesToClear.push(y);
+        // グリッドを再作成
+        for (let i = 0; i < 200; i++) {
+            const square = document.createElement('div');
+            this.gameField.appendChild(square);
         }
-        this.clearLines(linesToClear);
-    }
-
-    // ラインを消去し、スコアを計算
-    clearLines(linesToClear) {
-        const scores = {1: 100, 2: 300, 3: 500, 4: 800};
-        if (linesToClear.length > 0) {
-            for (let y of linesToClear) {
-                for (let x = 0; x < this.gameField.width; x++) {
-                    this.gameField.grid[x].splice(y, 1);
-                    this.gameField.grid[x].unshift(0);
-                }
-            }
-            this.score += scores[linesToClear.length] || 0;
-            this.linesCleared += linesToClear.length;
-            this.updateScoreBoard();
+        for (let i = 0; i < 16; i++) {
+            const square = document.createElement('div');
+            this.nextGameField.appendChild(square);
         }
-    }
 
-    // スコアボードを更新
-    updateScoreBoard() {
-        console.log(`Score: ${this.score}, Lines: ${this.linesCleared}`);
-    }
-    // ゲームオーバーを判定
-    checkGameOver() {
-        if (this.gameField.isCollision(this.currentTetrimino)) {
-            this.gameOver();
-        }
-    }
-
-    // ゲームオーバー時の処理
-    gameOver() {
-        console.log("Game Over");
-        console.log(`Final Score: ${this.score}`);
-        // ゲームオーバー画面表示やリスタートのためのUI更新
-    }
-
-    // タイマーによるテトリミノの自動落下
-    startGame() {
-        this.timer = setInterval(() => {
-            if (!this.moveDown()) {
-                this.fixTetrimino();
-                this.checkLines();
-                this.checkGameOver();
-                if (!this.isGameOver) {
-                    this.spawnNewTetrimino();
-                }
-            }
-        }, this.downTime);
-    }
-
-    // ゲームの一時停止と再開
-    pauseGame() {
-        clearInterval(this.timer);
-    }
-
-    resumeGame() {
-        this.startGame();
+        // スコアとその他のゲーム情報をリセット
+        this.score = 0;
+        this.linesCleared = 0;
+        this.time = 0;
     }
 }
 
+// ドキュメントが完全に読み込まれた後にゲームを開始
+document.addEventListener('DOMContentLoaded', () => {
+    const game = new Game();
+    document.getElementById('resetButton').addEventListener('click', () => {
+        game.gameReset(); // リセットボタンがクリックされたときにゲームをリセット
+    });
+});
