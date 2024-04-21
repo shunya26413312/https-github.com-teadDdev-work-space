@@ -20,8 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     	'purple',
     	'green',
     	'blue',
-    	'yellow',
-    	'pink'
+    	'yellow'
 	]
 
 	//ボタン押下時のアクション定義
@@ -45,11 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		  draw()
 		  timerId = setInterval(moveDown, 1000)
 		  nextRandom = Math.floor(Math.random()*tetoriminos.length)
+		  displayNextTeto()
 		}
 	})
 
 	//画面の幅
 	const width = 10;
+	//次のテトリミノ表示グリッド幅
+	const dispWidth = 4;
+	const dispIndex = 0;
+
 	//L字型テトリミノ
 	const lTetorimino = [
 		[0, width, width * 2, width * 2 + 1],
@@ -112,6 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	let random = Math.floor(Math.random()*tetoriminos.length)
 	let currentTeto = tetoriminos[random][currentRotation];
 
+	
+
 	//テトロミノ描画
 	function draw() {
 		currentTeto.forEach(index => {
@@ -121,6 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				gridSquares[actualIndex].style.backgroundColor = colors[random];
 			}
 		});
+
+		if (chkGameOver()) {
+			gameOver();
+		}
 	}
 
 	//テトロミノ削除
@@ -138,7 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!isAtLeftEdge) {
 			currentPosition -= 1;
 			if (currentTeto.some(index => gridSquares[currentPosition + index].classList.contains('taken'))) {
-				currentPosition += 1;  // もし移動先に既にブロックがあれば、戻す
+				// もし移動先に既にブロックがあれば、戻す
+				currentPosition += 1;  
 			}
 		}
 		draw();
@@ -151,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!isAtRightEdge) {
 			currentPosition += 1;
 			if (currentTeto.some(index => gridSquares[currentPosition + index].classList.contains('taken'))) {
-				currentPosition -= 1;  // もし移動先に既にブロックがあれば、戻す
+				// もし移動先に既にブロックがあれば、戻す
+				currentPosition -= 1;  
 			}
 		}
 		draw();
@@ -161,15 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (currentTeto.some(index => currentPosition + index + width >= gridSquares.length || gridSquares[currentPosition + index + width].classList.contains('taken'))) {
 			currentTeto.forEach(index => {
 				gridSquares[currentPosition + index].classList.add('taken');
-				gridSquares[currentPosition + index].style.backgroundColor = colors[random]; // 確実に色を保持
+				gridSquares[currentPosition + index].style.backgroundColor = colors[random];
 			});
 			random = nextRandom;
 			nextRandom = Math.floor(Math.random() * tetoriminos.length);
 			currentTeto = tetoriminos[random][currentRotation];
 			currentPosition = 4;
-            deleteLines();
-            updateRow(y, row);
+			displayNextTeto();
 			draw();
+			deleteLines();
 		}
 	}
 	
@@ -203,24 +215,49 @@ document.addEventListener('DOMContentLoaded', () => {
 		draw();
 	}
 
-	function isAtRight() {
-		return currentTeto.some(index=> (currentPosition + index + 1) % width === 0)  
-	}
-	  
-	function isAtLeft() {
-		return currentTeto.some(index=> (currentPosition + index) % width === 0)
-	}
-
 	//衝突判定
 	function chkCollision() {
     for (let index of currentTeto) {
         let nextPosition = currentPosition + index;
         if (nextPosition < 0 || nextPosition >= gridSquares.length || gridSquares[nextPosition].classList.contains('taken')) {
-            return false; // 衝突発生
+			// 衝突発生
+            return false; 
         }
     }
     return true; // 衝突なし
 }
+//次のテトリスを表示する
+function displayNextTeto() {
+	nextGridSquares.forEach(square => {
+		square.classList.remove('tetromino');
+		square.style.backgroundColor = '';
+	});
+
+	let nextTetrimino = tetoriminos[nextRandom][0];
+	nextTetrimino.forEach(index => {
+		 // 元のグリッドの x 座標
+		let x = index % width;
+		 // 元のグリッドの y 座標
+		let y = Math.floor(index / width);
+		 // nextGrid でのインデックス
+		let nextIndex = x + y * dispWidth;
+
+		if (nextIndex < nextGridSquares.length) {
+			nextGridSquares[nextIndex].classList.add('tetromino');
+			nextGridSquares[nextIndex].style.backgroundColor = colors[nextRandom];
+		}
+	});
+}
+
+function chkGameOver() {
+	return currentTeto.some(index => gridSquares[currentPosition + index].classList.contains('taken'));
+}
+
+function gameOver() {
+	clearInterval(timerId);
+	alert('Game Over');
+}
+
 function deleteLines() {
     let linesCleared = 0;
     for (let y = 0; y < 20; y++) {
@@ -263,7 +300,3 @@ function deleteLines() {
     }
 }}
 });	
-
-
-
-
